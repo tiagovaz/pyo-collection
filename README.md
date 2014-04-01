@@ -1,4 +1,4 @@
-Pyo script collection
+Pyo scripts collection
 =====================
 
 Here you find some of my pyo scripts.
