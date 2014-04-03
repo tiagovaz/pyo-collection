@@ -132,7 +132,7 @@ class Background():
         self.bpfilter.stop()
         self.outsig.stop()
 
-class Rumble(Instrument):
+class Rumble():
     def __init__(self, mul=1):
         self.fade = Fader(fadein=10, fadeout=0.001).stop()
         self.noise = BrownNoise(Randi(min=0.05, max=0.2, freq=[.1, .15])).stop()
@@ -160,13 +160,13 @@ class Rumble(Instrument):
         self.outsig.stop()
 
 class RhythmFou():
-    def __init__(self, pitch=1177.6, beat_freq=4, fadein=100, mul=1):
+    def __init__(self, pitch=1177.6, beat_freq=4, fadein=100, fadeout=.01, mul=1):
         self.t = LinTable([(0,0.0000),(0,0.8187),(1271,0.7358),(1412,0.6788),(2489,0.5907),(3584,0.4093),(4731,0.2124),(4802,0.0881),(4802,0.1140),(5526,0.1036),(6179,0.0829),(6532,0.0622),(6673,0.0000),(7150,0.0000),(8191,0.0000)])
         self.amp = TableRead(table=self.t, freq=beat_freq, loop=True, mul=.3*mul).stop()
         self.sin = SineLoop(freq=[45.8, pitch], feedback=.0885, mul=self.amp).stop()
         self.sin.ctrl()
         self.delay = Delay(self.sin, delay=[0.00371, 0.00190, 0.00131], feedback=0.1692, mul=[1.8, 0.4, 0.086]).stop()
-        self.gamp = Fader(fadein=fadein, fadeout=5, dur=0).stop()
+        self.gamp = Fader(fadein=fadein, fadeout=fadeout).stop()
         self.outsig = Mix(self.delay, voices=2, mul=self.gamp).stop()
 
     def play(self):
@@ -193,7 +193,7 @@ class Rhythm():
         self.fade = Fader(fadein=0.01, fadeout=0.01)
         self.outsig = Mix([self.v1, self.v2], voices=2, mul=mul*self.fade).stop()
 
-    def play(self, delay=0, dur=0):
+    def play(self):
         self.lf.play()
         self.v1.play()
         self.v2.play()
@@ -212,17 +212,26 @@ class DarkBackground(Instrument):
     def __init__(self, fadein=100, p1=.2054, p2=[.3966, .3933], chaos1=.4038, chaos2=.0769, feedback=.5, mul=.5):
         self.r1 = Rossler(pitch=p1, chaos=chaos1, stereo=True, mul=mul, add=.2).stop()
         self.r2 = Rossler(pitch=p2, chaos=chaos2, mul=self.r1*.8).stop()
-        self.amp = Fader(fadein=fadein, fadeout=5, dur=0).stop()
-        self.outsig = Delay(self.r2, feedback=feedback, mul=self.amp)
+        self.amp = Fader(fadein=fadein, fadeout=5).stop()
+        self.outsig = Delay(self.r2, feedback=feedback, mul=self.amp).stop()
 
-    def play(self, delay=0, dur=0):
-        self.r1.play(delay=delay, dur=dur)
-        self.r2.play(delay=delay, dur=dur)
-        self.amp.play(delay=delay, dur=dur)
+    def play(self):
+        self.r1.play()
+        self.r2.play()
+        self.amp.play()
+        self.outsig.out()
+
+    def tail(self):
+        self.amp.stop()
+
+    def stop(self):
+        self.r1.stop()
+        self.r2.stop()
+        self.outsig.stop()
 
 
 s = Server(audio='jack', sr=44100, nchnls=2, buffersize=512, duplex=1).boot()
-s.startoffset = 80
+#s.startoffset = 80
 
 # Sparks
 sparks = Sparks(mul=.3)
@@ -237,7 +246,7 @@ back3 = Background(freq=2700, q=4, mul=3)
 
 # Rhythm
 rhythm1 = Rhythm(freq=.04, mul=.05)
-rhythm2 = RhythmFou(mul=.8, fadein=10, beat_freq=5)
+rhythm2 = RhythmFou(mul=.05, fadein=30, fadeout=.01, beat_freq=5)
 rhythm3 = RhythmFou(mul=.04, pitch=1200, fadein=1, beat_freq=10)
 rhythm4 = RhythmFou(mul=.03, pitch=632, fadein=5, beat_freq=5)
 rhythm5 = RhythmFou(mul=.04, pitch=590, fadein=.01, beat_freq=5)
@@ -246,8 +255,8 @@ rhythm5 = RhythmFou(mul=.04, pitch=590, fadein=.01, beat_freq=5)
 sd1 = Sine([36.71, 36], mul=0.1).out(delay=70, dur=0)
 sd2 = Sine([72, 73], mul=0.025).out(delay=70, dur=0)
 sd3 = Sine([144, 144.2], mul=0.025).out(delay=90, dur=0)
-darkback = DarkBackground(mul=.2).out(delay=80, dur=0)
-darkback2 = DarkBackground(p2=[.203, .116], chaos1=.39, mul=.5).out(delay=70, dur=0)
+darkback = DarkBackground(mul=.2)
+darkback2 = DarkBackground(p2=[.203, .116], chaos1=.39, mul=.5)
 
 # Bass
 bass = Bass(mul=.5)
@@ -281,7 +290,7 @@ def event_3():
     pass
 
 def event_4():
-    pass
+    rhythm2.play()
 
 def event_5():
     back1.play()
@@ -289,7 +298,7 @@ def event_5():
     back3.play()
 
 def event_6():
-    rhythm2.play()
+    pass
 
 def event_7():
     rhythm1.play()
@@ -299,6 +308,7 @@ def event_7():
     back2.tail()
     back3.tail()
     rumble.tail()
+    darkback2.play()
 
 def event_8():
     rhythm2.stop()
@@ -307,6 +317,7 @@ def event_8():
     back3.stop()
     rumble.stop()
     sparks.stop()
+    darkback.play()
 
 def event_9():
     bass.play()
