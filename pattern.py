@@ -8,26 +8,40 @@ from pyo import *
 
 s = Server(audio='jack').boot()
 
-#t = CosTable([(0,0), (100,1), (500,.3), (8191,0)])
-#amp = TableRead(t, freq=1, loop=False)
-amp = Fader(fadein=.1, fadeout=.1, dur=.1)
-sin = Sine(freq=[40, 40.5], mul=amp).out()
+class MySine:
+    def __init__(self, freq_factor=.99):
+        self.amp = Fader(fadein=.01, fadeout=.01, dur=.25).stop()
+        self.sin = Sine(freq=400*freq_factor, mul=self.amp).out()
 
-beat = 1
-count = 1
+    def play(self):
+        self.amp.play()
 
-def pat():
-    global beat
-    if beat == 1:
-        amp.play()
-    if beat == 30:
-        amp.play()
-    if beat == 32:
-        beat = 1
-    else:
-        beat = beat + 1
+sin = MySine(.5)
+sin2 = MySine(.3)
 
-p = Pattern(pat, .125)
+class MyPattern:
+    def __init__(self, instrument, time=.25, beats=32, beats_to_play=[1, 8, 10, 12, 18, 24, 30]):
+        self.p = Pattern(self.pat, time).stop()
+        self.beats = beats
+        self.current_beat = 1
+        self.instrument = instrument
+        self.beats_to_play = beats_to_play
+
+    def pat(self):
+        if self.current_beat in self.beats_to_play:
+            self.instrument.play()
+        if self.current_beat == self.beats:
+            self.current_beat = 1
+        self.current_beat += 1
+
+    def play(self):
+        self.p.play()
+
+    def stop(self):
+        self.p.stop()
+
+
+p = MyPattern(sin, beats_to_play=[1, 32])
 p.play()
 
 s.gui(locals())
