@@ -73,7 +73,7 @@ class Bass():
     def __init__(self, mul=.3, freq=[24, 24.5]):
         self.t = LinTable([(0, 0.0000), (35, 0.9896), (4290, 0.6528), (5932, 0.2280), (7732, 0.1503), (8191, 0.0000)])
         self.t.graph()
-        self.amp = TableRead(self.t, freq=1, loop=False).stop()
+        self.amp = TableRead(self.t, freq=.5, loop=False).stop()
         self.sin = SineLoop(freq=freq, feedback=.05, mul=self.amp).stop()
         self.delay = Delay(self.sin, delay=[0.01, 0.038, 0.72], feedback=0, mul=[1, .78, .29]).stop()
         self.fade = Fader(fadein=.01, fadeout=.01).stop()
@@ -164,7 +164,6 @@ class RhythmFou():
              (7150, 0.0000), (8191, 0.0000)])
         self.amp = TableRead(table=self.t, freq=beat_freq, loop=True, mul=.3 * mul).stop()
         self.sin = SineLoop(freq=[45.8, pitch], feedback=.0885, mul=self.amp).stop()
-        self.sin.ctrl()
         self.delay = Delay(self.sin, delay=[0.00371, 0.00190, 0.00131], feedback=0.1692, mul=[1.8, 0.4, 0.086]).stop()
         self.gamp = Fader(fadein=fadein, fadeout=fadeout).stop()
         self.outsig = Mix(self.delay, voices=2, mul=self.gamp).stop()
@@ -209,9 +208,42 @@ class Rhythm():
         self.v2.stop()
         self.outsig.stop()
 
+class MyDelay:
+    """A sensor controls delay/reverb of an audio stream
+       - audio1 being an Input() signal
+       - audio2 being a sensor output (audio stream) from 0 to 1
+       - audio3 being a sensor output (audio stream) from 40 to 800
+    """
+    #TODO: no mess, take fadein/out as argument
+    def __init__(self, audio1, audio2=.01, audio3=40, mul=.7):
+        self.lfd = Sine([.4,.3], mul=.2, add=.5)
+        self.supersaw = SuperSaw(freq=[ audio3*uniform(0.94, 1.04) for i in range(10) ], detune=self.lfd, bal=0.7, mul=.1)
+        self.r = Freeverb(self.supersaw, size=.94, damp=.87, bal=.9, mul=1)
+        self.d2 = Delay(self.r, delay=audio2, feedback=uniform(0.95, 1), mul=.4)
+        self.d3 = Delay(self.d2, delay=[.05, .1, .25, .5], feedback=.25, mul=.4)
+        #self.c = Chorus(audio1, depth=[1.5,1.6], feedback=0.5, bal=0.5)
+        self.r2 = Freeverb(audio1, size=.74, damp=.87, bal=.5, mul=1)
+        self.d4 = Delay(self.r2, delay=audio2, feedback=uniform(0.95, 1), mul=.6)
+        #self.mix = Freeverb(Mix(self.d2 + self.d3 + self.r2 + self.d4, mul=.7), size=.34, damp=.37, bal=.9, mul=.9)
+        self.amp = Fader(fadein=20, fadeout=20)
+        self.mix = Mix(self.d2 + self.d3 + self.r2 + self.d4, mul=self.amp*mul).out()
+
+    def play(self):
+        self.amp.play()
+        return self
+
+    def stop(self):
+        self.amp.stop()
+        return self
+
+    def getOut(self):
+        return self.amp
+
+    def setInput(self, x, fadetime=.001):
+        self.input.setInput(x, fadetime)
 
 class HighFreq():
-    def __init__(self, freq=[11200, 11202], dur=.3, mul=.5):
+    def __init__(self, freq=[11200, 11202], dur=.4, mul=.5):
         self.amp = Fader(fadein=.01, fadeout=.01, dur=dur, mul=mul)
         self.sine = SineLoop(freq=freq, mul=self.amp * .05).out()
         self.rev = Freeverb(self.sine, size=.84, damp=.87, bal=.9, mul=self.amp * .2).out()
@@ -277,6 +309,28 @@ class DarkBackground():
         self.r2.stop()
         self.outsig.stop()
 
+class MyGranulator:
+    #FIXME: finish him!
+    def __init__(self, input):
+        snd = SndTable(input)
+        env = HannTable()
+        pos = Phasor(freq=snd.getRate()*.25, mul=snd.getSize())
+        dur = Noise(mul=.001, add=.1)
+        g = Granulator(snd, env, [1, 1.001], pos, dur, 32, mul=.1).out()
+
+    def play(self):
+        pass
+
+    def stop(self):
+        pass
+
+class MyRev:
+    def __init__(self, input):
+        self.rev = STRev(input, inpos=0.25, revtime=2, cutoff=5000, bal=0.25, roomSize=1).stop()
+        self.rev.ctrl()
+
+    def play(self):
+        self.rev.out()
 
 class MyPattern:
     def __init__(self, instrument, time=.25, beats=32, beats_to_play=[1, 8, 10, 12, 18, 24, 30]):
@@ -303,17 +357,29 @@ class MyPattern:
 
 class MarkovMidiPlayer:
     """
-    - velocity = int 0 to 127
-    - duration = int
+    - midi_velocity = int 0 to 127
+    - midi_duration = int
     - midi_channels = list of int
-    - melody = 'bach', 'schoenberg', 'albeniz' #TODO: accept any music21 corpus
+    - midi_transpo = int
+    - melody = list of int (midi notes)
     - markov_order = int
+    - markov_time: list of float
     """
-    def __init__(self):
+    #TODO: aceitar objetos Pyo como parâmetros
+    def __init__(self, markov_order=2, melody=None, markov_time=[.125, .25, 1, 5, 10, 20],
+                 midi_channels=[1], midi_velocity=[100], midi_duration=[300],
+                 midi_transpo=0):
+
         # Getting some corpus from music21 library and putting them in a dictionary
         # note1: you can use 'elements' attribute to fetch a voice in the part
         # note2: you can see the score anytime using method 'show()'
         self.index = 0
+        self.markov_order = markov_order
+        self.markov_time = markov_time
+        self.midi_channels = midi_channels
+        self.midi_velocity = midi_velocity
+        self.midi_duration = midi_duration
+        self.midi_transpo = midi_transpo
 
         self.melodies = {
             'bach': corpus.parse("bach/bwv30.6").getElementById('Bass'),
@@ -333,20 +399,22 @@ class MarkovMidiPlayer:
 
         self.pitches = [self.pitches_a, self.pitches_s, self.pitches_b]
 
+        self.current_melody = choice(self.pitches)
+
         # Initialize the object
-        self.marko = Markov(order=1)
+        self.marko = Markov(order=self.markov_order)
 
         # Start the record mode
         self.marko.mkStartRecord()
 
         # Record a list of pitches in one pass
-        self.marko.mkSetList(self.pitches_s)
+        self.marko.mkSetList(self.current_melody)
 
         # Start the playback mode
         self.marko.mkStartPlayback()
 
         # markov_time = Choice([.125, .25, .5, 5, 10, 20, 30])
-        self.pattern = Pattern(function=self.pick_a_note, time=Choice([1, 5, 10, 20, 30]))
+        self.pattern = Pattern(function=self.pick_a_note, time=Choice(self.markov_time))
 
         # dens = Expseg([(0, 0), (80, 100)], exp=10).play()
         # dens.graph()
@@ -359,32 +427,45 @@ class MarkovMidiPlayer:
         mid = self.marko.next()
 
         # Use this one!
-        # TODO: get list of instruments automagically
-        s.sendMidiNote(mid, randint(10, 100), channel=1, timestamp=randint(100, 5000))
+        s.sendMidiNote(mid+self.midi_transpo, choice(self.midi_velocity),
+                       channel=choice(self.midi_channels), timestamp=choice(self.midi_duration))
 
         # Testing a more linear output
         #s.sendMidiNote(mid, 100, channel=0, timestamp=500)
 
-    def play_melody():
+    def play_melody(self):
         # Use this to hear the original melody
         if self.index < len(pitches) - 1:
             index = self.index + 1
         else:
             iself.ndex = 0
         note = pitches[self.index]
-        s.sendMidiNote(note, 100, channel=1, timestamp=300)
+        s.sendMidiNote(note, 100, channel=choice(self.midi_channels), timestamp=300)
 
     def setMelody(self, melody):
         # go random
         #marko.mkSetList(choice([pitches_s, pitches_b, pitches_a]))
-        if melody == 'bach':
-            current_melody = self.pitches_b
-        elif melody == 'albeniz':
-            current_melody = self.pitches_a
-        elif melody == 'schoenberg':
-            current_melody = self.pitches_s
-        self.marko.mkSetList(current_melody)
+        self.current_melody = melody
+        self.marko.mkSetList(self.current_melody)
         self.marko.mkStartPlayback()
+
+    def setMarkovTime(self, time):
+        self.markov_time = time
+
+    def setMarkovOrder(self, order):
+        self.markov_order = order
+
+    def setMidiChannels(self, channels):
+        self.midi_channels = channels
+
+    def setMidiVelocity(self, velocity):
+        self.midi_velocity = velocity
+
+    def setMidiDuration(self, duration):
+        self.midi_duration = duration
+
+    def setTranspo(self, transpo):
+        self.midi_transpo = transpo
 
     def play(self):
         self.pattern.play()
@@ -393,7 +474,7 @@ class MarkovMidiPlayer:
 ################ END MARKOV PLAYER ####################
 
 s = Server(audio='jack', sr=44100, nchnls=2, buffersize=512, duplex=1).boot()
-s.startoffset = 50
+s.startoffset = 65
 # Set midi device (use pm_list_devices() to list them)
 s.setMidiOutputDevice(5)
 
@@ -424,6 +505,9 @@ sd2 = Sine([72, 73], mul=0.015).out(delay=70, dur=0)
 sd3 = Sine([144, 144.2], mul=0.015).out(delay=90, dur=0)
 darkback = DarkBackground(mul=.2)
 darkback2 = DarkBackground(p2=[.203, .116], chaos1=.39, mul=.4)
+
+#mydelay = MyDelay(Input(mul=.1), 1, 1000, 1)
+instruments_rev = MyRev(Input(mul=.8))
 
 # Random high freqs
 # env2 = LinTable([(0, 0.0000), (0, 1.0000), (1694, 1.0000), (1694, 0.0000), (8192, 0.0000)])
@@ -467,6 +551,7 @@ def event_6():
 
 def event_7():
     markov_player.play()
+    instruments_rev.play()
     rhythm1.play()
     rhythm2.tail()
     sparks.tail()
@@ -477,7 +562,7 @@ def event_7():
     darkback2.play()
 
 def event_8():
-    markov_player.setMelody('albeniz')
+    #markov_player.setMelody([40, 41, 42, 43, 44, 45])
     rhythm2.stop()
     back1.stop()
     back2.stop()
@@ -487,15 +572,12 @@ def event_8():
     darkback.play()
 
 def event_9():
-    markov_player.setMelody('bach')
     p_bass1.play()  # rhythm pattern
     p_bass2.play()  # rhythm pattern
     p_noise.play()  # rhythm pattern
 
 
 def event_10():
-    # set_new_markov_list(pitches_s)
-    # markov_time.setChoice([.125, .25, .5, 5, 10, 20, 30])
     p_high.play()
 
 
@@ -522,10 +604,10 @@ def event_15():
 pp = Print(count, 1)
 trig_score = Score(count)
 
-bass = Bass(mul=.2, freq=[24, 24.1, 24.5])
-bass2 = Bass(mul=.4, freq=[24, 24.1, 24.5])
-snoise = SmoothNoise(mul=.05)
-high = HighFreq(mul=.25)
+bass = Bass(mul=.4, freq=[24, 24.1, 24.5])
+bass2 = Bass(mul=.6, freq=[24, 24.1, 24.5])
+snoise = SmoothNoise(mul=.2)
+high = HighFreq(mul=.10)
 
 p_bass1 = MyPattern(bass, time=.125, beats=64, beats_to_play=[1])
 p_bass2 = MyPattern(bass2, time=.125, beats=64, beats_to_play=[3, 32])
