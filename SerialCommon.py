@@ -65,11 +65,11 @@ di = distance.add_output("/vcnl4000/distance", 1, 'i', None, 0, 65536)
 li = light.add_output("/vcnl4000/light", 1, 'i', None, 0, 65536)
 
 while 1:
+    distance.poll(0)
+    light.poll(0)
+
     l = [bin(i)[2:].zfill(8) for i in readFromSerialPort(c)]
-    print int(l[0]+l[1], 2), int(l[2]+l[3], 2)
+#    print int(l[0]+l[1], 2), int(l[2]+l[3], 2)
 
     di.update(int(l[0]+l[1], 2))
     li.update(int(l[2]+l[3], 2))
-
-    distance.poll()
-    light.poll()

@@ -35,7 +35,8 @@ def encodeToSLIP(byteList):
 def decodeFromSLIP(serialFD):
      dataBuffer = []
      while 1:
-          serialByte = getSerialByte(serialFD)
+          #serialByte = getSerialByte(serialFD)
+          serialByte = ord(serialFD.read())
           if serialByte is None:
                return -1
           elif serialByte == SLIP_END:

@@ -8,7 +8,7 @@ import random
 # Tiago Bortoletto Vaz <tiago@debian.org>
 # Public domain - Wed Oct  9 15:27:32 EDT 2013
 
-s = Server().boot()
+s = Server(audio='jack').boot()
 
 # Brown noise to have less high frequency to cutoff
 noise = BrownNoise(mul=Randi(0.5,1))

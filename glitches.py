@@ -23,12 +23,7 @@ along with Glitches.  If not, see <http://www.gnu.org/licenses/>.
 ### !!this code is a work in progress!!  ###
 
 from pyo import *
-from music21 import *
-from Markov import Markov
 from random import *
-
-# for markov
-midi_velocity = randint(10, 100)
 
 class Sparks:
     def __init__(self, mul=1):
@@ -353,133 +348,8 @@ class MyPattern:
     def stop(self):
         self.p.stop()
 
-############ START MARKOV PLAYER ######################
-
-class MarkovMidiPlayer:
-    """
-    - midi_velocity = int 0 to 127
-    - midi_duration = int
-    - midi_channels = list of int
-    - midi_transpo = int
-    - melody = list of int (midi notes)
-    - markov_order = int
-    - markov_time: list of float
-    """
-    #TODO: aceitar objetos Pyo como parâmetros
-    def __init__(self, markov_order=2, melody=None, markov_time=[.125, .25, 1, 5, 10, 20],
-                 midi_channels=[1], midi_velocity=[100], midi_duration=[300],
-                 midi_transpo=0):
-
-        # Getting some corpus from music21 library and putting them in a dictionary
-        # note1: you can use 'elements' attribute to fetch a voice in the part
-        # note2: you can see the score anytime using method 'show()'
-        self.index = 0
-        self.markov_order = markov_order
-        self.markov_time = markov_time
-        self.midi_channels = midi_channels
-        self.midi_velocity = midi_velocity
-        self.midi_duration = midi_duration
-        self.midi_transpo = midi_transpo
-
-        self.melodies = {
-            'bach': corpus.parse("bach/bwv30.6").getElementById('Bass'),
-            'schoenberg': corpus.parse("schoenberg/opus19/movement2").getElementById('P1-Staff1'),
-            'albeniz': corpus.parse("albeniz/asturias").getElementById("P1-Staff2")
-        }
-
-        # Choose one of the corpus above to be the played melody
-        al = self.melodies['albeniz']
-        sc = self.melodies['schoenberg']
-        ba = self.melodies['bach']
-
-        # Getting notes in midi standard
-        self.pitches_a = [i.midi for i in al.pitches]
-        self.pitches_s = [i.midi for i in sc.pitches]
-        self.pitches_b = [i.midi for i in ba.pitches]
-
-        self.pitches = [self.pitches_a, self.pitches_s, self.pitches_b]
-
-        self.current_melody = choice(self.pitches)
-
-        # Initialize the object
-        self.marko = Markov(order=self.markov_order)
-
-        # Start the record mode
-        self.marko.mkStartRecord()
-
-        # Record a list of pitches in one pass
-        self.marko.mkSetList(self.current_melody)
-
-        # Start the playback mode
-        self.marko.mkStartPlayback()
-
-        # markov_time = Choice([.125, .25, .5, 5, 10, 20, 30])
-        self.pattern = Pattern(function=self.pick_a_note, time=Choice(self.markov_time))
-
-        # dens = Expseg([(0, 0), (80, 100)], exp=10).play()
-        # dens.graph()
-        # markov_trig = Cloud(density=dens, poly=5).stop()
-        # markov_cloud = TrigFunc(markov_trig, pick_a_note).play()
-
-    # Function called by the Pattern object
-    def pick_a_note(self):
-        # Pick the next note from the Markov generator
-        mid = self.marko.next()
-
-        # Use this one!
-        s.sendMidiNote(mid+self.midi_transpo, choice(self.midi_velocity),
-                       channel=choice(self.midi_channels), timestamp=choice(self.midi_duration))
-
-        # Testing a more linear output
-        #s.sendMidiNote(mid, 100, channel=0, timestamp=500)
-
-    def play_melody(self):
-        # Use this to hear the original melody
-        if self.index < len(pitches) - 1:
-            index = self.index + 1
-        else:
-            iself.ndex = 0
-        note = pitches[self.index]
-        s.sendMidiNote(note, 100, channel=choice(self.midi_channels), timestamp=300)
-
-    def setMelody(self, melody):
-        # go random
-        #marko.mkSetList(choice([pitches_s, pitches_b, pitches_a]))
-        self.current_melody = melody
-        self.marko.mkSetList(self.current_melody)
-        self.marko.mkStartPlayback()
-
-    def setMarkovTime(self, time):
-        self.markov_time = time
-
-    def setMarkovOrder(self, order):
-        self.markov_order = order
-
-    def setMidiChannels(self, channels):
-        self.midi_channels = channels
-
-    def setMidiVelocity(self, velocity):
-        self.midi_velocity = velocity
-
-    def setMidiDuration(self, duration):
-        self.midi_duration = duration
-
-    def setTranspo(self, transpo):
-        self.midi_transpo = transpo
-
-    def play(self):
-        self.pattern.play()
-
-
-################ END MARKOV PLAYER ####################
-
-s = Server(audio='jack', sr=44100, nchnls=2, buffersize=512, duplex=1).boot()
-s.startoffset = 65
-# Set midi device (use pm_list_devices() to list them)
-s.setMidiOutputDevice(5)
-
-# Markov
-markov_player = MarkovMidiPlayer()
+s = Server(audio='offline', sr=44100, nchnls=2, buffersize=512, duplex=1).boot()
+#s.startoffset = 65
 
 # Sparks
 sparks = Sparks(mul=.3)
@@ -530,7 +400,6 @@ def event_0():
 
 def event_1():
     sparks.play()
-    # markov_trig.play()
 
 def event_2():
     pass
@@ -550,8 +419,6 @@ def event_6():
     pass
 
 def event_7():
-    markov_player.play()
-    instruments_rev.play()
     rhythm1.play()
     rhythm2.tail()
     sparks.tail()
@@ -562,7 +429,6 @@ def event_7():
     darkback2.play()
 
 def event_8():
-    #markov_player.setMelody([40, 41, 42, 43, 44, 45])
     rhythm2.stop()
     back1.stop()
     back2.stop()
@@ -576,26 +442,20 @@ def event_9():
     p_bass2.play()  # rhythm pattern
     p_noise.play()  # rhythm pattern
 
-
 def event_10():
     p_high.play()
-
 
 def event_11():
     rhythm3.play()
 
-
 def event_12():
     pass
-
 
 def event_13():
     rhythm4.play()
 
-
 def event_14():
     rhythm5.play()
-
 
 def event_15():
     master.stop()
@@ -614,4 +474,5 @@ p_bass2 = MyPattern(bass2, time=.125, beats=64, beats_to_play=[3, 32])
 p_noise = MyPattern(snoise, time=.125, beats=64, beats_to_play=[31])
 p_high = MyPattern(high, time=.125, beats=64, beats_to_play=[3, 33])
 
-s.gui(locals())
+s.start()
+#s.gui(locals())
