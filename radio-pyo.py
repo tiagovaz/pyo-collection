@@ -26,7 +26,7 @@ def update_song(script_file):
     path = os.path.dirname(script_file)
     basename = os.path.basename(os.path.splitext(script_file)[0])
     ogg_file = path+'/'+basename+'.ogg'
-    ogg_file_tmp = path+'/'+basename+'.ogg.tmp'
+    ogg_file_tmp = 'radiopyo.ogg'
     stamp_files = [i for i in glob.glob(os.path.splitext(script_file)[0]+'*.stamp')]
     # remove other eventual stamps for the same file
     for f in stamp_files:
@@ -34,18 +34,32 @@ def update_song(script_file):
     # lock it to not be played during rendering
     open(ogg_file+'.lock', 'a').close()
     os.system(script_file)
-    shutil.move(ogg_file, ogg_file_tmp)
+    #TODO: use python import for that
     for l in open(script_file, 'r').readlines():
         if l.split('=')[0].strip() == 'TITLE':
-            TITLE = clean_string(l.split('=')[1])
+            TITLE = clean_string(nocomment(l.split('=')[1]))
         if l.split('=')[0].strip() == 'ARTIST':
-            ARTIST = clean_string(l.split('=')[1])
+            ARTIST = clean_string(nocomment(l.split('=')[1]))
+        if l.split('=')[0].strip() == 'DURATION':
+            DURATION = clean_string(nocomment(l.split('=')[1]))
     # TODO: use a proper python library for this    
-    cmd_tags = 'oggz comment -c vorbis -o '+ogg_file+' '+ogg_file_tmp+' TITLE="'+TITLE+'" ARTIST="'+ARTIST+'"'
+    cmd_tags = 'oggz comment -c vorbis -o '+ogg_file+' '+ogg_file_tmp+' TITLE="'+TITLE+'" ARTIST="'+ARTIST+'" DURATION="'+DURATION+'"'
     os.system(cmd_tags)
     os.remove(ogg_file_tmp)
     # unlock it
     os.remove(ogg_file+'.lock')
+
+import tokenize
+import io
+
+def nocomment(string):
+    result = []
+    g = tokenize.generate_tokens(io.BytesIO(string).readline)  
+    for toknum, tokval, _, _, _  in g:
+        # print(toknum,tokval)
+        if toknum != tokenize.COMMENT:
+            result.append((toknum, tokval))
+    return tokenize.untokenize(result)
 
 def clean_string(string):
     punctuations = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
