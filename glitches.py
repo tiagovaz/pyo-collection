@@ -39,7 +39,6 @@ class Sparks:
         self.outsig = Mix(self.sin, voices=2, mul=self.fade).stop()
 
     def play(self):
-        print "bli"
         self.dens.play()
         self.middur.play()
         self.trig.play()
@@ -67,10 +66,10 @@ class Sparks:
 class Bass():
     def __init__(self, mul=.3, freq=[24, 24.5]):
         self.t = LinTable([(0, 0.0000), (35, 0.9896), (4290, 0.6528), (5932, 0.2280), (7732, 0.1503), (8191, 0.0000)])
-        self.t.graph()
         self.amp = TableRead(self.t, freq=.5, loop=False).stop()
         self.sin = SineLoop(freq=freq, feedback=.05, mul=self.amp).stop()
         self.delay = Delay(self.sin, delay=[0.01, 0.038, 0.72], feedback=0, mul=[1, .78, .29]).stop()
+        self.delay.ctrl()
         self.fade = Fader(fadein=.01, fadeout=.01).stop()
         self.outsig = Mix(self.delay, voices=2, mul=mul * self.fade).stop()
 
@@ -322,34 +321,40 @@ class MyGranulator:
 class MyRev:
     def __init__(self, input):
         self.rev = STRev(input, inpos=0.25, revtime=2, cutoff=5000, bal=0.25, roomSize=1).stop()
-        self.rev.ctrl()
 
     def play(self):
         self.rev.out()
 
+class Melody:
+    
+
 class MyPattern:
-    def __init__(self, instrument, time=.25, beats=32, beats_to_play=[1, 8, 10, 12, 18, 24, 30]):
-        self.p = Pattern(self.pat, time).stop()
-        self.beats = beats
+    """
+    Instruments is a dict instrument:beats (pyoObj:[list of int])
+    """
+    def __init__(self, instruments={}, time=.25, beats=32):
         self.current_beat = 1
-        self.instrument = instrument
-        self.beats_to_play = beats_to_play
+        self.time = time
+        self.instruments = instruments
+        self.beats = beats
+        self.p = Pattern(self.pat, time).stop()
 
     def pat(self):
-        if self.current_beat in self.beats_to_play:
-            self.instrument.play()
-        if self.current_beat == self.beats:
-            self.current_beat = 0
+        for k, v in self.instruments.iteritems():
+            if self.current_beat in v:
+                k.play()
+            if self.current_beat == self.beats:
+                self.current_beat = 0
         self.current_beat += 1
 
     def play(self):
         self.p.play()
 
     def stop(self):
-        self.p.stop()
+        elf.p.stop()
 
-s = Server(audio='offline', sr=44100, nchnls=2, buffersize=512, duplex=1).boot()
-#s.startoffset = 65
+s = Server(audio='jack', sr=44100, nchnls=2, buffersize=512, duplex=0).boot()
+#s.startoffset = 80
 
 # Sparks
 sparks = Sparks(mul=.3)
@@ -379,14 +384,6 @@ darkback2 = DarkBackground(p2=[.203, .116], chaos1=.39, mul=.4)
 #mydelay = MyDelay(Input(mul=.1), 1, 1000, 1)
 instruments_rev = MyRev(Input(mul=.8))
 
-# Random high freqs
-# env2 = LinTable([(0, 0.0000), (0, 1.0000), (1694, 1.0000), (1694, 0.0000), (8192, 0.0000)])
-# rnddur = RandDur(min=[1, 1, 1, 1], max=4)
-# tenv2 = Change(rnddur)
-# amp2 = TrigEnv(tenv2, env2, rnddur, mul=0.001)
-# fr = TrigRand(tenv2, min=7000, max=12000)
-# syns = Sine(freq=fr, mul=amp2 * .5).out(delay=100, dur=0)
-
 ### Global time ###
 GlitchesSec = 10
 
@@ -396,10 +393,12 @@ count = Counter(master, min=0, max=100)
 
 #### SCORE ####
 def event_0():
-    rumble.play()
+    mypat.play()
+#    rumble.play()
 
 def event_1():
-    sparks.play()
+    darkback2.play()
+#    sparks.play()
 
 def event_2():
     pass
@@ -408,6 +407,7 @@ def event_3():
     pass
 
 def event_4():
+    exit(0)
     rhythm2.play()
 
 def event_5():
@@ -464,15 +464,14 @@ def event_15():
 pp = Print(count, 1)
 trig_score = Score(count)
 
-bass = Bass(mul=.4, freq=[24, 24.1, 24.5])
+bass = Bass(mul=[.2, .1, .05], freq=[24, 24.2, 21.1])
 bass2 = Bass(mul=.6, freq=[24, 24.1, 24.5])
-snoise = SmoothNoise(mul=.2)
+snoise = SmoothNoise(mul=.1)
 high = HighFreq(mul=.10)
 
-p_bass1 = MyPattern(bass, time=.125, beats=64, beats_to_play=[1])
-p_bass2 = MyPattern(bass2, time=.125, beats=64, beats_to_play=[3, 32])
-p_noise = MyPattern(snoise, time=.125, beats=64, beats_to_play=[31])
-p_high = MyPattern(high, time=.125, beats=64, beats_to_play=[3, 33])
+mypat = MyPattern({bass:[1, 32], high:[3, 30], snoise:[31]}, time=.125, beats=64)
+#p_bass1 = MyPattern(bass, time=.125, beats=64, beats_to_play=[1])
+#p_bass2 = MyPattern(bass2, time=.125, beats=64, beats_to_play=[3, 32])
 
-s.start()
-#s.gui(locals())
+#s.start()
+s.gui(locals())
