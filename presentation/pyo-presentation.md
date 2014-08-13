@@ -97,7 +97,7 @@
 - ...
 
 # Examples
-## Ex1: getting a (sort of) chorus effect from an audio file
+## Getting a (sort of) chorus effect from an audio file
 
     !python
     from pyo import *
@@ -106,7 +106,7 @@
                  speed=[1,1.005,1.007,.992], loop=True, mul=.25).out()
     s.gui(locals())
 
-## Ex2: Exploring some harmonicity with FM
+## Exploring some harmonicity with FM
 
     !python
     from pyo import *
@@ -121,7 +121,7 @@
 ---
 
 # Examples
-## Ex3: Filtering noise to build a (convincing) wind
+## Filtering noise to build a (convincing) wind
     !python
     from pyo import *
     import random
@@ -151,8 +151,8 @@
     s.gui(locals())
 ---
 
-#Examples
-## Ex4: Now let's write our first 4 voices composition!
+# Examples
+## Now let's write our first 4 voices composition!
 
     !python
     from pyo import *
@@ -309,13 +309,71 @@ A trigger in Pyo is an audio signal with a value of 1 surrounded by 0s.
 
 ---
 
-# MIDI
+# Examples
+## MIDI out
 
+    !python
+    from pyo import *
+    from random import *
+    
+    s = Server(audio='jack')
+    s.setMidiOutputDevice(3)
+    s.boot()
+    
+    def playsoprano():
+        s.sendMidiNote(choice([60, 62, 63, 65, 67, 68, 71]), randint(30,100), channel=1)
+    
+    def playtenor():
+        s.sendMidiNote(choice([48, 50, 51, 53, 55, 56, 59]), randint(50,60), channel=2)
+    
+    def playbass():
+        s.sendMidiNote(choice([36, 36, 36, 41, 48]), randint(80,100), channel=3)
+    
+    met = Beat(time=.5, taps=16, w1=80, w2=60, w3=40).play()
+    p = TrigFunc(met, playsoprano).play()
+    
+    met2 = Beat(time=1, taps=16, w1=70, w2=50, w3=30).play()
+    p2 = TrigFunc(met2, playtenor).play()
+    
+    met3 = Beat(time=1, taps=16, w1=100, w2=20, w3=10).play()
+    p3 = TrigFunc(met3, playbass).play()
+    
+    s.gui(locals())
 
 
 ---
 
-# Open Sound Control
+# Examples
+## Open Sound Control - server
+    !python
+    from pyo import *
+    s = Server().boot()
+    lfo = Sine(.05, mul=.5, add=.5)
+    rnd = Sig(0)
+    rnd.ctrl()
+    send = OscSend([lfo, rnd], port=9000, address=['/pos','/rand'], host='127.0.0.1')
+    s.gui(locals())
+
+## Open Sound Control - client
+    !python
+    from pyo import *
+    s = Server(audio="jack").boot()
+    table = SndTable("transparent.aif")
+    env = HannTable()
+    rec = OscReceive(port=9000, address=['/pos', '/rand'])
+    pos = Port(rec['/pos'], risetime=.05, falltime=.05, mul=table.getDur()*44100.)
+    pit = [1., 1.002]
+    dur = Noise(mul=Clip(rec['/rand'], min=0, max=.09), add=.1)
+    grain = Granulator( table=table,    
+                        env=env,       
+                        pitch=pit,    
+                        pos=pos,     
+                        dur=dur,    
+                        grains=32, 
+                        basedur=.1,
+                        mul=.1).out()
+    s.gui(locals())
+
 
 ---
 
@@ -335,5 +393,3 @@ A trigger in Pyo is an audio signal with a value of 1 surrounded by 0s.
 ---
 
 # Thanks!
-
----
