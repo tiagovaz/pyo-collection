@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2010 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  Original slides: Marcin Wichary (mwichary@google.com)
+  Modifications: Ernest Delgado (ernestd@google.com)
+                 Alex Russell (slightlyoff@chromium.org)
+
+  landslide modifications: Adam Zapletal (adamzap@gmail.com)
+                           Nicolas Perriault (nperriault@gmail.com)
+-->
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Introduction to Pyo: a Python module for digital signal processing</title>
+    <!-- Styles -->
+    
+    <link rel="stylesheet" media="print" href="/usr/lib/python2.7/dist-packages/landslide/themes/default/css/print.css">
+    <link rel="stylesheet" media="screen, projection" href="theme/css/screen.css">
+    
+    
+    <!-- /Styles -->
+    <!-- Javascripts -->
+    
+    <script type="text/javascript" src="/usr/lib/python2.7/dist-packages/landslide/themes/default/js/slides.js"></script>
+    
+    
+    <!-- /Javascripts -->
+</head>
+<body>
+  <div id="blank"></div>
+  <div class="presentation">
+    <div id="current_presenter_notes">
+      <div id="presenter_note"></div>
+    </div>
+    <div class="slides">
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Introduction to Pyo: a Python module for digital signal processing</h1></header>
+            
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              1/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>About</h1></header>
+            
+            
+            <section><h2>Pyo</h2>
+<ul>
+<li>Written in C, focused on performance (and simplicity!)</li>
+<li>Free software, under GNU/GPL license</li>
+<li>Great API documentation (created using Sphinx)</li>
+<li>Supports OSC and MIDI</li>
+<li>Multi-plataform (though it's easier to get it running in Linux)</li>
+<li>Credits to <a href="http://musique.umontreal.ca/personnel/belanger_o.html">Olivier Bélanger</a>, creator and main developer of Pyo</li>
+<li>Project details at <a href="http://ajaxsoundstudio.com/software/pyo/">http://ajaxsoundstudio.com/software/pyo/</a></li>
+</ul>
+<h2>Me</h2>
+<ul>
+<li>Music student, curious about computers</li>
+<li>Maintainer of RadioPyo and Pyo packages for Debian/Ubuntu</li>
+<li>Wrote this presentation, available under CC BY 4.0</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              2/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Getting started</h1></header>
+            
+            
+            <section><h2>Simple sine output</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span>                <span class="c"># create a pyo server object</span>
+<span class="n">s</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>                    <span class="c"># boot the server</span>
+<span class="n">sin</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">mul</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>         <span class="c"># start a single sine stream</span>
+<span class="n">sin</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>                   <span class="c"># send this sine stream to audio ouput</span>
+<span class="n">s</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>                   <span class="c"># start the server</span>
+</pre></div>
+
+<h2>Pyo server</h2>
+<div class="highlight"><pre><span class="n">Server</span><span class="p">(</span><span class="n">sr</span><span class="o">=</span><span class="mi">44100</span><span class="p">,</span> <span class="n">nchnls</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">buffersize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">duplex</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">audio</span><span class="o">=</span><span class="s">&#39;portaudio&#39;</span><span class="p">)</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              3/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Basic features</h1></header>
+            
+            
+            <section><h2>Interaction with Pyo server</h2>
+<div class="highlight"><pre><span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+
+<h2>Setting object values</h2>
+<div class="highlight"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="mi">440</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">setFreq</span><span class="p">(</span><span class="mi">440</span><span class="p">)</span>
+<span class="n">a</span><span class="o">.</span><span class="n">freq</span> <span class="o">=</span> <span class="mi">440</span>
+<span class="c"># PyoObject to replace any attribute with portamento:</span>
+<span class="n">a</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">attr</span><span class="o">=</span><span class="s">&quot;freq&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+
+<h2>Setting many audio streams at once</h2>
+<div class="highlight"><pre><span class="n">a</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="p">[</span> <span class="n">x</span><span class="o">*</span><span class="mi">40</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span> <span class="p">],</span> <span class="n">mul</span><span class="o">=</span><span class="p">[</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span> <span class="o">.</span><span class="mi">08</span><span class="p">,</span> <span class="o">.</span><span class="mo">07</span><span class="p">,</span> <span class="o">.</span><span class="mo">02</span><span class="p">,</span> <span class="o">.</span><span class="mi">08</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">09</span><span class="p">])</span>
+</pre></div>
+
+<h2>Chaining objects</h2>
+<div class="highlight"><pre><span class="n">freq</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">sin</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="n">freq</span> <span class="o">+</span> <span class="mi">440</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              4/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Important methods</h1></header>
+            
+            
+            <section><ul>
+<li>play()</li>
+<li>out()</li>
+<li>stop()</li>
+<li>ctrl()</li>
+<li>graph()</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              5/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Pyo classes categories</h1></header>
+            
+            
+            <section><ul>
+<li>Audio Signal Analysis</li>
+<li>Arithmetic</li>
+<li>Control Signals</li>
+<li>Dynamic management</li>
+<li>Special Effects</li>
+<li>Filters</li>
+<li>Fast Fourier Transform</li>
+<li>Phase Vocoder</li>
+<li>Signal Generators</li>
+<li>Internal objects</li>
+<li>Matrix Processing</li>
+<li>Midi Handling</li>
+<li>Open Sound Control</li>
+<li>Routing</li>
+<li>Event Sequencing</li>
+<li>Soundfile Players</li>
+<li>Random generators</li>
+<li>Table Processing</li>
+<li>Sample Accurate Timing (Triggers)</li>
+<li>Tables</li>
+<li>...</li>
+</ul>
+<h1>Examples</h1>
+<h2>Getting a (sort of) chorus effect from an audio file</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="n">audio</span><span class="o">=</span><span class="s">&#39;jack&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">SfPlayer</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s">&quot;/usr/share/doc/python-pyo/examples/snds/baseballmajeur_m.aif&quot;</span><span class="p">,</span>
+             <span class="n">speed</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.005</span><span class="p">,</span><span class="mf">1.007</span><span class="p">,</span><span class="o">.</span><span class="mi">992</span><span class="p">],</span> <span class="n">loop</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+
+<h2>Exploring some harmonicity with FM</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+<span class="n">car</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">triangular</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">155</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="n">rat</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="o">.</span><span class="mi">25</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="n">ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="n">fm</span> <span class="o">=</span> <span class="n">FM</span><span class="p">(</span><span class="n">carrier</span><span class="o">=</span><span class="n">car</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="n">rat</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">ind</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">05</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              6/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Examples</h1></header>
+            
+            
+            <section><h2>Filtering noise to build a (convincing) wind</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="n">noise</span> <span class="o">=</span> <span class="n">BrownNoise</span><span class="p">(</span><span class="n">mul</span><span class="o">=</span><span class="n">Randi</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">j</span> <span class="o">=</span> <span class="n">Randi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="n">Randi</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="n">freqs1</span> <span class="o">=</span> <span class="n">Randi</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+<span class="n">q1</span> <span class="o">=</span> <span class="n">Randi</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="n">ButBP</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freqs1</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q1</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">2</span><span class="o">*</span><span class="n">j</span><span class="p">)</span>
+
+<span class="n">freqs2</span> <span class="o">=</span> <span class="p">[</span><span class="n">Randi</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span><span class="o">*</span><span class="n">j</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+<span class="n">q2</span> <span class="o">=</span> <span class="n">Randi</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="n">ButBP</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freqs2</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q2</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="n">j</span><span class="o">*</span><span class="mf">1.5</span><span class="p">)</span>
+
+<span class="n">freqs3</span> <span class="o">=</span> <span class="p">[</span><span class="n">Randi</span><span class="p">(</span><span class="mi">2990</span><span class="p">,</span> <span class="mi">3000</span><span class="p">)</span><span class="o">*</span><span class="n">j</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+<span class="n">q3</span> <span class="o">=</span> <span class="n">Randi</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="n">ButBP</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freqs3</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q3</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">01</span><span class="p">)</span>
+
+<span class="n">freqs4</span> <span class="o">=</span> <span class="p">[</span><span class="n">Randi</span><span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="mi">10100</span><span class="p">)</span><span class="o">*</span><span class="n">j</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+<span class="n">q4</span> <span class="o">=</span> <span class="n">Randi</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="n">ButBP</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freqs4</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q4</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">01</span><span class="p">)</span>
+
+<span class="n">fad</span> <span class="o">=</span> <span class="n">Fader</span><span class="p">(</span><span class="n">fadein</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">Mix</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="n">f2</span><span class="p">,</span> <span class="n">f3</span><span class="p">,</span> <span class="n">f4</span><span class="p">],</span><span class="n">voices</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="n">fad</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              7/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Examples</h1></header>
+            
+            
+            <section><h2>Now let's write our first 4 voices composition!</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="n">pitches</span> <span class="o">=</span> <span class="p">[</span><span class="n">midiToHz</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">36</span><span class="p">,</span><span class="mi">43</span><span class="p">,</span><span class="mi">48</span><span class="p">,</span><span class="mi">55</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">62</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mi">65</span><span class="p">,</span><span class="mi">67</span><span class="p">,</span><span class="mi">69</span><span class="p">,</span><span class="mi">71</span><span class="p">,</span><span class="mi">72</span><span class="p">]]</span>
+
+<span class="c"># Add more voices here to generate a simple counterpoint</span>
+<span class="n">choice</span> <span class="o">=</span> <span class="n">Choice</span><span class="p">(</span><span class="n">choice</span><span class="o">=</span><span class="n">pitches</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ch_port</span> <span class="o">=</span> <span class="n">Port</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">risetime</span><span class="o">=.</span><span class="mo">001</span><span class="p">,</span> <span class="n">falltime</span><span class="o">=.</span><span class="mo">001</span><span class="p">)</span>
+
+<span class="c"># Two simple instruments</span>
+<span class="n">lfdetune</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">07</span><span class="p">,</span> <span class="n">add</span><span class="o">=.</span><span class="mo">07</span><span class="p">)</span>
+<span class="n">instrument1</span> <span class="o">=</span> <span class="n">SuperSaw</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="n">ch_port</span><span class="p">,</span> <span class="n">detune</span><span class="o">=</span><span class="n">lfdetune</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">lfind</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">add</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">instrument2</span> <span class="o">=</span> <span class="n">FM</span><span class="p">(</span><span class="n">carrier</span><span class="o">=</span><span class="n">ch_port</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">1.0025</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">lfind</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">025</span><span class="p">)</span>
+
+<span class="c"># Send instruments output to delay</span>
+<span class="n">src_sum</span> <span class="o">=</span> <span class="n">instrument1</span><span class="o">.</span><span class="n">mix</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">instrument2</span><span class="o">.</span><span class="n">mix</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">lfdel</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">003</span><span class="p">,</span> <span class="n">add</span><span class="o">=.</span><span class="mo">005</span><span class="p">)</span>
+<span class="n">comb</span> <span class="o">=</span> <span class="n">Delay</span><span class="p">(</span><span class="n">src_sum</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="n">lfdel</span><span class="p">,</span> <span class="n">feedback</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c"># Send two resulting signals to reverb and output</span>
+<span class="n">out_sum</span> <span class="o">=</span> <span class="n">src_sum</span> <span class="o">+</span> <span class="n">comb</span>
+<span class="n">rev</span> <span class="o">=</span> <span class="n">STRev</span><span class="p">(</span><span class="n">out_sum</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mi">3500</span><span class="p">,</span> <span class="n">bal</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">roomSize</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              8/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Event sequencing</h1></header>
+            
+            
+            <section><h2>Pyo offers different directions for event sequencing</h2>
+<ul>
+<li>class Score(input, fname='event_')</li>
+<li>class Pattern(function, time=1)</li>
+<li>class TrigFunc(input, function, arg=None)</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              9/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Score</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">event_0</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Introduction&quot;</span>
+
+<span class="k">def</span> <span class="nf">event_1</span><span class="p">():</span>
+    <span class="k">pass</span>
+
+<span class="k">def</span> <span class="nf">event_2</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;Profit&quot;</span>
+
+<span class="n">met</span> <span class="o">=</span> <span class="n">Metro</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">met</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">score</span> <span class="o">=</span> <span class="n">Score</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s">&quot;event_&quot;</span><span class="p">)</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">()</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              10/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>TrigFunc</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="n">time</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+<span class="k">def</span> <span class="nf">score</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">time</span>
+    <span class="n">time</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">time</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Introduction&quot;</span>
+
+    <span class="k">if</span> <span class="n">time</span> <span class="o">==</span> <span class="mi">15</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Profit!&quot;</span>
+
+<span class="n">mainTime</span> <span class="o">=</span> <span class="n">Metro</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">mainFunc</span> <span class="o">=</span> <span class="n">TrigFunc</span><span class="p">(</span><span class="n">mainTime</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              11/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Pattern</h1></header>
+            
+            
+            <section><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">HarmTable</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">.</span><span class="mi">33</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">.</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">.</span><span class="mi">143</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">.</span><span class="mi">111</span><span class="p">])</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">Osc</span><span class="p">(</span><span class="n">table</span><span class="o">=</span><span class="n">t</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="p">[</span><span class="mi">250</span><span class="p">,</span><span class="mi">251</span><span class="p">],</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">pat</span><span class="p">():</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">401</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">freq</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">Pattern</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="o">.</span><span class="mi">125</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              12/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Triggers</h1></header>
+            
+            
+            <section><p>A trigger in Pyo is an audio signal with a value of 1 surrounded by 0s.</p>
+<h2>Examples of trigger 'generators':</h2>
+<ul>
+<li><strong>Metro</strong>: Generates isochronous trigger signals.</li>
+<li><strong>Beat</strong>: Generates algorithmic trigger patterns.</li>
+<li><strong>Thresh</strong>: Sends a trigger when a signal crosses a threshold.</li>
+<li><strong>Cloud</strong>: Generates random triggers with control over the generation density.</li>
+</ul>
+<h2>Examples of trigger 'receivers':</h2>
+<ul>
+<li><strong>TrigEnv</strong>: Starts reading an envelope in x seconds each time it receives a trigger.</li>
+<li><strong>TrigFunc</strong>: Calls a given function each time it receives a trigger.</li>
+<li><strong>TrigXnoise</strong>: A new value is generated each time the object receive a trigger in input. Some of available distributions are uniform, linear min/max, triangular, exp min/max, gaussian, loopseg...</li>
+<li><strong>TrigXnoiseMidi</strong>: Same as above, but generates MIDI notes instead. It receives a MIDI range as parameter.</li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              13/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Examples</h1></header>
+            
+            
+            <section><h2>Playing with triggers and performing our first canon :)</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="n">audio</span><span class="o">=</span><span class="s">&#39;jack&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="c"># Builds an amplitude envelope in a linear table</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">LinTable</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">190</span><span class="p">,</span><span class="o">.</span><span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="o">.</span><span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">4300</span><span class="p">,</span><span class="o">.</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">8191</span><span class="p">,</span><span class="mi">0</span><span class="p">)],</span> <span class="n">size</span><span class="o">=</span><span class="mi">8192</span><span class="p">)</span>
+<span class="n">env</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span>
+
+<span class="c"># Metronome provided by Beat</span>
+<span class="n">met</span> <span class="o">=</span> <span class="n">Beat</span><span class="p">(</span><span class="n">time</span><span class="o">=.</span><span class="mi">125</span><span class="p">,</span> <span class="n">taps</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">w1</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">w2</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w3</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+
+<span class="c"># Reads the amp envelope for each trigger from Beat</span>
+<span class="n">amp</span> <span class="o">=</span> <span class="n">TrigEnv</span><span class="p">(</span><span class="n">met</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">dur</span><span class="o">=</span><span class="n">met</span><span class="p">[</span><span class="s">&#39;dur&#39;</span><span class="p">],</span> <span class="n">mul</span><span class="o">=</span><span class="n">met</span><span class="p">[</span><span class="s">&#39;amp&#39;</span><span class="p">])</span>
+
+<span class="c"># Generates a midi note for each trigger from Beat in a pseudo-random distribution</span>
+<span class="n">fr</span> <span class="o">=</span> <span class="n">TrigXnoiseMidi</span><span class="p">(</span><span class="n">met</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">x2</span><span class="o">=.</span><span class="mi">3</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mrange</span><span class="o">=</span><span class="p">(</span><span class="mi">48</span><span class="p">,</span><span class="mi">85</span><span class="p">))</span>
+
+<span class="c"># Receives the midi note from XnoiseMidi and scale it into C harmonic minor (try others!)</span>
+<span class="n">frsnap</span> <span class="o">=</span> <span class="n">Snap</span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">choice</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">11</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c"># This instrument receives a frequency from Snap and molde it inside an envelop from TrigEnv</span>
+<span class="n">lfo</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="n">freq</span><span class="o">=.</span><span class="mo">05</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mo">05</span><span class="p">,</span> <span class="n">add</span><span class="o">=.</span><span class="mi">08</span><span class="p">)</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">SineLoop</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="n">frsnap</span><span class="p">,</span> <span class="n">feedback</span><span class="o">=</span><span class="n">lfo</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="n">amp</span><span class="o">*.</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c"># Output the same signal with some delay in the right speaker (try a &#39;real&#39; counterpoint!)</span>
+<span class="n">rev</span> <span class="o">=</span> <span class="n">Delay</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="p">[</span><span class="o">.</span><span class="mi">25</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">],</span> <span class="n">feedback</span><span class="o">=.</span><span class="mi">3</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              14/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Examples</h1></header>
+            
+            
+            <section><h2>MIDI out</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="n">audio</span><span class="o">=</span><span class="s">&#39;jack&#39;</span><span class="p">)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">setMidiOutputDevice</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">playsoprano</span><span class="p">():</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendMidiNote</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="mi">60</span><span class="p">,</span> <span class="mi">62</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">67</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">71</span><span class="p">]),</span> <span class="n">randint</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span><span class="mi">100</span><span class="p">),</span> <span class="n">channel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">playtenor</span><span class="p">():</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendMidiNote</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="mi">48</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">53</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">59</span><span class="p">]),</span> <span class="n">randint</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="mi">60</span><span class="p">),</span> <span class="n">channel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">playbass</span><span class="p">():</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">sendMidiNote</span><span class="p">(</span><span class="n">choice</span><span class="p">([</span><span class="mi">36</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">41</span><span class="p">,</span> <span class="mi">48</span><span class="p">]),</span> <span class="n">randint</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span><span class="mi">100</span><span class="p">),</span> <span class="n">channel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">met</span> <span class="o">=</span> <span class="n">Beat</span><span class="p">(</span><span class="n">time</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">taps</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">w1</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">w2</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">w3</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">TrigFunc</span><span class="p">(</span><span class="n">met</span><span class="p">,</span> <span class="n">playsoprano</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+
+<span class="n">met2</span> <span class="o">=</span> <span class="n">Beat</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">taps</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">w1</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span> <span class="n">w2</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w3</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">TrigFunc</span><span class="p">(</span><span class="n">met2</span><span class="p">,</span> <span class="n">playtenor</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+
+<span class="n">met3</span> <span class="o">=</span> <span class="n">Beat</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">taps</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">w1</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">w2</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">w3</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+<span class="n">p3</span> <span class="o">=</span> <span class="n">TrigFunc</span><span class="p">(</span><span class="n">met3</span><span class="p">,</span> <span class="n">playbass</span><span class="p">)</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              15/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide has_code">
+          <div class="inner">
+            
+            <header><h1>Examples</h1></header>
+            
+            
+            <section><h2>Open Sound Control - server</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">()</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+<span class="n">lfo</span> <span class="o">=</span> <span class="n">Sine</span><span class="p">(</span><span class="o">.</span><span class="mo">05</span><span class="p">,</span> <span class="n">mul</span><span class="o">=.</span><span class="mi">5</span><span class="p">,</span> <span class="n">add</span><span class="o">=.</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">rnd</span> <span class="o">=</span> <span class="n">Sig</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">rnd</span><span class="o">.</span><span class="n">ctrl</span><span class="p">()</span>
+<span class="n">send</span> <span class="o">=</span> <span class="n">OscSend</span><span class="p">([</span><span class="n">lfo</span><span class="p">,</span> <span class="n">rnd</span><span class="p">],</span> <span class="n">port</span><span class="o">=</span><span class="mi">9000</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;/pos&#39;</span><span class="p">,</span><span class="s">&#39;/rand&#39;</span><span class="p">],</span> <span class="n">host</span><span class="o">=</span><span class="s">&#39;127.0.0.1&#39;</span><span class="p">)</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+
+<h2>Open Sound Control - client</h2>
+<div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="n">audio</span><span class="o">=</span><span class="s">&quot;jack&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">boot</span><span class="p">()</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">SndTable</span><span class="p">(</span><span class="s">&quot;transparent.aif&quot;</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">HannTable</span><span class="p">()</span>
+<span class="n">rec</span> <span class="o">=</span> <span class="n">OscReceive</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">9000</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;/pos&#39;</span><span class="p">,</span> <span class="s">&#39;/rand&#39;</span><span class="p">])</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">Port</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s">&#39;/pos&#39;</span><span class="p">],</span> <span class="n">risetime</span><span class="o">=.</span><span class="mo">05</span><span class="p">,</span> <span class="n">falltime</span><span class="o">=.</span><span class="mo">05</span><span class="p">,</span> <span class="n">mul</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">getDur</span><span class="p">()</span><span class="o">*</span><span class="mf">44100.</span><span class="p">)</span>
+<span class="n">pit</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.002</span><span class="p">]</span>
+<span class="n">dur</span> <span class="o">=</span> <span class="n">Noise</span><span class="p">(</span><span class="n">mul</span><span class="o">=</span><span class="n">Clip</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s">&#39;/rand&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=.</span><span class="mi">09</span><span class="p">),</span> <span class="n">add</span><span class="o">=.</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">grain</span> <span class="o">=</span> <span class="n">Granulator</span><span class="p">(</span> <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>    
+                    <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>       
+                    <span class="n">pitch</span><span class="o">=</span><span class="n">pit</span><span class="p">,</span>    
+                    <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span>     
+                    <span class="n">dur</span><span class="o">=</span><span class="n">dur</span><span class="p">,</span>    
+                    <span class="n">grains</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> 
+                    <span class="n">basedur</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">mul</span><span class="o">=.</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">out</span><span class="p">()</span>
+<span class="n">s</span><span class="o">.</span><span class="n">gui</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+</pre></div>
+</section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              16/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Pyo Ecosystem</h1></header>
+            
+            
+            <section><h2>Software</h2>
+<ul>
+<li><a href="http://ajaxsoundstudio.com/software/cecilia/">Cecilia5</a>: audio signal processing environment</li>
+<li><a href="http://code.google.com/p/zyne">Zyne</a>: modular soft synthesizer</li>
+<li><a href="http://code.google.com/p/soundgrain">Soundgrain</a>: graphical interface where users can draw and edit trajectories to control granular sound synthesis</li>
+<li><a href="http://radiopyo.acaia.ca">RadioPyo</a>: live python music (compositions code <a href="https://github.com/tiagovaz/radiopyo">available</a>)</li>
+<li><a href="http://www.psychopy.org">PsychoPy</a>: application to allow the presentation of stimuli and collection of data for a wide range of neuroscience, psychology and psychophysics experiments.</li>
+</ul>
+<h2>Discussion</h2>
+<ul>
+<li><a href="https://groups.google.com/forum/#!forum/pyo-discuss">https://groups.google.com/forum/#!forum/pyo-discuss</a></li>
+</ul></section>
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              17/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+      <!-- slide source: pyo-presentation.md -->
+      <div class="slide-wrapper">
+        <div class="slide">
+          <div class="inner">
+            
+            <header><h1>Thanks!</h1></header>
+            
+            
+          </div>
+          <div class="presenter_notes">
+            <header><h1>Presenter Notes</h1></header>
+            <section>
+            
+            </section>
+          </div>
+          <footer>
+            
+            <aside class="source">
+              Source: <a href="pyo-presentation.md">pyo-presentation.md</a>
+            </aside>
+            
+            <aside class="page_number">
+              18/18
+            </aside>
+          </footer>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <div id="toc" class="sidebar hidden">
+    <h2>Table of Contents</h2>
+    <table>
+      <caption>Table of Contents</caption>
+      
+      <tr id="toc-row-1">
+        <th><a href="#slide1">Introduction to Pyo: a Python module for digital signal processing</a></th>
+        <td><a href="#slide1">1</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-2">
+        <th><a href="#slide2">About</a></th>
+        <td><a href="#slide2">2</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-3">
+        <th><a href="#slide3">Getting started</a></th>
+        <td><a href="#slide3">3</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-4">
+        <th><a href="#slide4">Basic features</a></th>
+        <td><a href="#slide4">4</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-5">
+        <th><a href="#slide5">Important methods</a></th>
+        <td><a href="#slide5">5</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-6">
+        <th><a href="#slide6">Pyo classes categories</a></th>
+        <td><a href="#slide6">6</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-7">
+        <th><a href="#slide7">Examples</a></th>
+        <td><a href="#slide7">7</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-8">
+        <th><a href="#slide8">Examples</a></th>
+        <td><a href="#slide8">8</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-9">
+        <th><a href="#slide9">Event sequencing</a></th>
+        <td><a href="#slide9">9</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-10">
+        <th><a href="#slide10">Score</a></th>
+        <td><a href="#slide10">10</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-11">
+        <th><a href="#slide11">TrigFunc</a></th>
+        <td><a href="#slide11">11</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-12">
+        <th><a href="#slide12">Pattern</a></th>
+        <td><a href="#slide12">12</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-13">
+        <th><a href="#slide13">Triggers</a></th>
+        <td><a href="#slide13">13</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-14">
+        <th><a href="#slide14">Examples</a></th>
+        <td><a href="#slide14">14</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-15">
+        <th><a href="#slide15">Examples</a></th>
+        <td><a href="#slide15">15</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-16">
+        <th><a href="#slide16">Examples</a></th>
+        <td><a href="#slide16">16</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-17">
+        <th><a href="#slide17">Pyo Ecosystem</a></th>
+        <td><a href="#slide17">17</a></td>
+      </tr>
+      
+      
+      <tr id="toc-row-18">
+        <th><a href="#slide18">Thanks!</a></th>
+        <td><a href="#slide18">18</a></td>
+      </tr>
+      
+      
+    </table>
+  </div>
+  
+  <div id="help" class="sidebar hidden">
+    <h2>Help</h2>
+    <table>
+      <caption>Help</caption>
+      <tr>
+        <th>Table of Contents</th>
+        <td>t</td>
+      </tr>
+      <tr>
+        <th>Exposé</th>
+        <td>ESC</td>
+      </tr>
+      <tr>
+        <th>Full screen slides</th>
+        <td>e</td>
+      </tr>
+      <tr>
+        <th>Presenter View</th>
+        <td>p</td>
+      </tr>
+      <tr>
+        <th>Source Files</th>
+        <td>s</td>
+      </tr>
+      <tr>
+        <th>Slide Numbers</th>
+        <td>n</td>
+      </tr>
+      <tr>
+        <th>Toggle screen blanking</th>
+        <td>b</td>
+      </tr>
+      <tr>
+        <th>Show/hide slide context</th>
+        <td>c</td>
+      </tr>
+      <tr>
+        <th>Notes</th>
+        <td>2</td>
+      </tr>
+      <tr>
+        <th>Help</th>
+        <td>h</td>
+      </tr>
+    </table>
+  </div>
+  <script>main()</script>
+</body>
+</html>
