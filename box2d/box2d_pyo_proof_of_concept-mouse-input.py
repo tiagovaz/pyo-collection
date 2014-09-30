@@ -2,9 +2,16 @@ import pyglet
 from pyglet import gl
 from Box2D import (
     b2Vec2, b2PolygonDef, b2World,
-    b2BodyDef, b2AABB, b2MouseJointDef
+    b2BodyDef, b2AABB, b2MouseJointDef,
+    b2CircleDef
 )
+import math
+import primitives
 
+# TODO:
+# - add many blocks
+# - draw ball
+# - draw line
 
 # GLOBALS
 FPS = 60
@@ -14,6 +21,12 @@ H = 72
 
 SCALE = 0.1    # World units - screen units conversion factor
 
+TEX_COORDS = [
+    (0, 1),
+    (1, 1),
+    (1, 0),
+    (-0, 0),
+]
 
 class Main:
     def __init__(self):
@@ -26,6 +39,8 @@ class Main:
             True  # Use "sleep" optimisation
         )
 
+        # blocks, balls etc
+        self.objs = []
         wallsdef = b2BodyDef()
         walls = self.world.CreateBody(wallsdef)
         walls.userData = 'Blocks'
@@ -107,15 +122,14 @@ class Main:
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
 
-        transformed = [surface.world_to_screen(block_body.GetWorldPoint(p)) for p in block.points]
-        gl.glColor3f(1.0, 0.1, 0)
-        gl.glBegin(gl.GL_QUADS)
-        for p in transformed:
-            gl.glVertex2f(*p)
-        gl.glEnd()
+        for obj in self.objs:
+            obj.draw()
+
+
 
     def update(self, dt):
         self.world.Step(1.0 / FPS, 20, 16)
+        ball_body.ApplyForce(b2Vec2(0, 5), ball_body.position)
 
 class Block():
     def __init__(self, box_size):
@@ -137,14 +151,54 @@ class Block():
 
         self.body.CreateShape(shape)
         self.body.SetMassFromShapes()
+        surface.objs.append(self)
 
+    def draw(self):
+        transformed = [surface.world_to_screen(self.body.GetWorldPoint(p)) for p in self.points]
+        gl.glColor3f(0.4, 0.8, 0.4)
+        gl.glBegin(gl.GL_QUADS)
+        for p in transformed:
+            gl.glVertex2f(*p)
+        gl.glEnd()
+
+
+class Ball():
+    def __init__(self, box_size):
+        self.box_size = box_size
+        self.points = [
+            (-self.box_size, self.box_size),
+            (self.box_size, self.box_size),
+            (self.box_size, -self.box_size),
+            (-self.box_size, -self.box_size)
+        ]
+        bodydef = b2BodyDef()
+        bodydef.position = b2Vec2(W * 0.33, H * 0.7)
+        self.body = world.CreateBody(bodydef)
+        self.cdef = b2CircleDef()
+        self.cdef.radius = self.box_size
+        self.cdef.density = 0.1
+        self.cdef.restitution = 0.4
+        self.cdef.friction = 0.0
+        self.body.CreateShape(self.cdef)
+        self.body.SetMassFromShapes()
+        surface.objs.append(self)
+
+    def draw(self):
+        print self.body
+        center = ((-self.box_size + self.box_size) / 2, (self.box_size + -self.box_size) / 2)
+        m = surface.world_to_screen(self.body.GetWorldPoint(center))
+        self.c = primitives.Circle(m[0],m[1],width=self.cdef.radius+40,color=(0.,.9,0.,1.),stroke=0)
+#        self.c.style = gl.GLU_LINE
+        self.c.render()
 
 surface = Main()
 world = surface.world
 
-block = Block(2)
+block = Block(5)
 block_body = block.body
 
+ball = Ball(2)
+ball_body = ball.body
 
 
 if __name__ == '__main__':
